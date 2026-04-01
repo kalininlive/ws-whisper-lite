@@ -1,0 +1,26 @@
+# Секретность (Ключи)
+settings.json
+*.key
+
+# Большие бинарные файлы (Whisper модели)
+models/
+bin/
+
+# Сборка и временные файлы
+dist/
+main.build/
+__pycache__/
+*.spec
+*.exe
+log.txt
+
+# Виртуальные окружения
+.venv/
+venv/
+env/
+.env
+
+# Системные файлы
+.vscode/
+.idea/
+*.log

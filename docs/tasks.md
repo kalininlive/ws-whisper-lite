@@ -1,0 +1,22 @@
+# ЗАДАЧИ ПРОЕКТА (Фаза 1: Упрощенный MVP)
+
+- [x] 1. Утвердить архитектуру MVP
+- [x] 2. Создать файловую структуру
+- [ ] 3. Настроить окружение (установить `requirements.txt`)
+- [ ] 4. Скачать модель `whisper.cpp` (`ggml-small.bin` или GGUF)
+- [ ] 5. Реализовать базовый захват звука (`sounddevice`, запись в единый буфер от нажатия до отпускания)
+- [ ] 6. Реализовать простой Hotkey (`keyboard` с фоновым потоком)
+- [ ] 7. Реализовать последовательный вызов Whisper (без стриминга)
+- [ ] 8. Реализовать вставку текста через `SendInput` и буфер обмена
+- [ ] 9. Собрать все модули в `main.py` (Push -> Talk -> Release -> Paste)
+- [ ] Implement `get_audio_chunk()` in `audio.py` for streaming.
+- [ ] Implement `StreamingThread` logic in `main.py`.
+- [ ] Implement incremental text injection to avoid duplication.
+- [ ] Verify streaming works for both Google and Groq engines.
+- [ ] Expand language list (20+ popular languages) in Settings.
+- [ ] Implement smart Auto-detection using OS language (`locale.getdefaultlocale`).
+- [ ] Add flag emojis and bilingual labels to the language dropdown.
+- [ ] Verify Groq and Google engines work with new language codes.
+- [ ] 10. Протестировать MVP-пайплайн
+- [ ] 11. (Опционально позднее) Добавить Streaming и VAD
+- [ ] 12. (Опционально позднее) Упаковать в PyInstaller + Inno Setup
