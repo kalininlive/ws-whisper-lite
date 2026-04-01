@@ -52,3 +52,12 @@ class AudioRecorder:
                 return full_audio
             else:
                 return np.array([], dtype='float32')
+    def get_current_data(self, start_sample=0):
+        """Возвращает текущий накопленный буфер аудио без остановки потока."""
+        with self._lock:
+            if not self.audio_data:
+                return np.array([], dtype='float32')
+            # Склеиваем всё, что есть на данный момент
+            full_audio = np.concatenate(self.audio_data, axis=0).flatten()
+            # Возвращаем только ту часть, которую еще не обрабатывали
+            return full_audio[start_sample:]

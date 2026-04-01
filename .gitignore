@@ -1,18 +1,22 @@
-# Секретность (Ключи)
+# Секреты и конфиг с ключами
 settings.json
 *.key
-
-# Большие бинарные файлы (Whisper модели)
-models/
-bin/
 
 # Сборка и временные файлы
 dist/
 main.build/
+*.dist/
 __pycache__/
+*.pyc
+*.pyo
 *.spec
 *.exe
+*.log
 log.txt
+
+# Большие бинарные файлы (legacy офлайн режим)
+models/
+bin/
 
 # Виртуальные окружения
 .venv/
@@ -20,7 +24,18 @@ venv/
 env/
 .env
 
-# Системные файлы
+# Claude Code
+.claude/
+
+# Legacy / внутренние файлы
+copy_whisper.py
+setup.py
+SPEC.md
+docs/
+github_push.bat
+
+# Системные
 .vscode/
 .idea/
-*.log
+Thumbs.db
+.DS_Store

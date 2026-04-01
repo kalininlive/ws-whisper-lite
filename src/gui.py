@@ -6,14 +6,23 @@ import time
 import locale
 
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QLabel, QDialog, QComboBox, QLineEdit, QSystemTrayIcon, QMenu,
+                               QLabel, QDialog, QComboBox, QLineEdit, QCheckBox, QSystemTrayIcon, QMenu,
                                QGraphicsDropShadowEffect, QFrame, QSpacerItem, QSizePolicy)
-from PySide6.QtCore import Qt, QPropertyAnimation, QRect, QRectF, QTimer, QSize, QEasingCurve, QCoreApplication, Property
+from PySide6.QtCore import Qt, QPropertyAnimation, QRect, QRectF, QTimer, QSize, QEasingCurve, QCoreApplication, Property, QPoint
 from PySide6.QtGui import QIcon, QColor, QFont, QPixmap, QPainter, QBrush, QCursor, QKeyEvent, QPainterPath, QLinearGradient, QRadialGradient, QPen
 from config import encrypt_key, decrypt_key
 import webbrowser
 
-LOGO_PATH = r"C:\Users\kalib\.gemini\antigravity\brain\868b2227-c940-40f6-952e-edfce0c75007\wswhisper_logo_1775022979626.png"
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller/Nuitka """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+LOGO_PATH = resource_path("assets/logo.png")
+ICON_PATH = resource_path("assets/icon.png")
 
 # ================= LOCALIZATION =================
 lang_code = locale.getdefaultlocale()[0]
@@ -144,10 +153,10 @@ class SettingsDialog(QDialog):
         self.frame = QFrame(self)
         self.frame.setStyleSheet("""
             QFrame {
-                background-color: rgba(10, 15, 25, 240); 
+                background-color: rgba(10, 15, 25, 0.9); 
                 border-radius: 20px;
-                border: 2px solid rgba(0, 200, 255, 80);
-                border-top: 2px solid rgba(255, 255, 255, 90); 
+                border: 2px solid rgba(0, 200, 255, 120);
+                border-top: 2px solid rgba(255, 255, 255, 150); 
             }
             QLabel {
                 color: #e0e0e0;
@@ -231,6 +240,52 @@ class SettingsDialog(QDialog):
         
         v_layout.addLayout(header_layout)
         v_layout.addSpacing(20)
+        
+        # --- СЕКЦИЯ ПРОКСИ ---
+        proxy_group = QFrame()
+        proxy_group.setStyleSheet("border: 1px solid rgba(0, 255, 255, 40); border-radius: 12px; background: rgba(0,0,0,50);")
+        proxy_v = QVBoxLayout(proxy_group)
+        
+        proxy_header = QHBoxLayout()
+        lbl_proxy_title = QLabel("🌐 Прокси")
+        lbl_proxy_title.setStyleSheet("color: #ffffff; font-size: 15px; font-weight: 900; border: none; background: transparent;")
+        proxy_header.addWidget(lbl_proxy_title)
+        
+        self.btn_buy_proxy = QPushButton("🛒 Купить IPv4")
+        self.btn_buy_proxy.setFixedWidth(110)
+        self.btn_buy_proxy.setCursor(Qt.PointingHandCursor)
+        self.btn_buy_proxy.setStyleSheet("""
+            QPushButton { 
+                background: #007bff; color: #ffffff; border: none; padding: 4px; border-radius: 6px; 
+                font-size: 11px; font-weight: bold;
+            }
+            QPushButton:hover { background: #0056b3; }
+        """)
+        self.btn_buy_proxy.clicked.connect(lambda: webbrowser.open("https://proxy6.net/e/79776"))
+        proxy_header.addWidget(self.btn_buy_proxy)
+        proxy_v.addLayout(proxy_header)
+        
+        self.chk_proxy = QCheckBox("Использовать Прокси")
+        self.chk_proxy.setChecked(self.config.get("proxy_enabled", False))
+        self.chk_proxy.setStyleSheet("color: #ffffff; font-size: 13px; border: none; font-weight: 900; background: transparent;")
+        proxy_v.addWidget(self.chk_proxy)
+        
+        self.edit_proxy_raw = QLineEdit()
+        self.edit_proxy_raw.setPlaceholderText("IP:PORT:USER:PASS")
+        self.edit_proxy_raw.setText(self.config.get("proxy_raw", ""))
+        self.edit_proxy_raw.setStyleSheet("""
+            QLineEdit {
+                background: rgba(0, 0, 0, 180); 
+                color: #00eeff; 
+                padding: 8px; 
+                font-size: 13px;
+                border: 1px solid rgba(0, 255, 255, 60);
+            }
+        """)
+        proxy_v.addWidget(self.edit_proxy_raw)
+        
+        v_layout.addWidget(proxy_group)
+        v_layout.addSpacing(15)
         
         # ENGINE
         lbl_engine = QLabel(L_ENGINE)
@@ -336,26 +391,61 @@ class SettingsDialog(QDialog):
         lbl_about.setStyleSheet("font-size: 12px; border: none; line-height: 1.5;")
         v_layout.addWidget(lbl_about, alignment=Qt.AlignCenter)
         
+        # Инициализация баннера уведомлений
+        self.banner = NotificationBanner(self)
+        self.banner.move(self.width(), 100) # Позиция за экраном справа
+        
         main_layout.addWidget(self.frame)
         self.on_engine_change(self.opt_engine.currentText())
 
     def on_engine_change(self, choice):
         if choice == "Groq":
             self.frame_groq.show()
-            self.setFixedSize(500, 780)
+            self.setFixedSize(500, 920) # Увеличено с 850
         else:
             self.frame_groq.hide()
-            self.setFixedSize(500, 640)
+            self.setFixedSize(500, 780) # Увеличено с 720
 
     def save_and_close(self):
         self.config["engine"] = self.opt_engine.currentText()
-        # Сохраняем ISO код, а не текстовую метку
         self.config["language"] = self.opt_lang.currentData()
         self.config["groq_api_key"] = encrypt_key(self.entry_key.text().strip())
         self.config["hotkey"] = self.entry_hotkey.text().strip()
         self.config["autostart"] = self.chk_autostart.isChecked()
+        self.config["proxy_enabled"] = self.chk_proxy.isChecked()
+        
+        raw_proxy = self.edit_proxy_raw.text().strip()
+        self.config["proxy_raw"] = raw_proxy
+        self._parse_proxy(raw_proxy)
+        
         self.on_save(self.config)
         self.accept()
+
+    def _parse_proxy(self, raw):
+        """Умный разбор строки прокси."""
+        self.config["proxy_ip"] = ""
+        self.config["proxy_port"] = ""
+        self.config["proxy_user"] = ""
+        self.config["proxy_pass"] = ""
+        
+        if not raw: return
+        
+        if "@" in raw:
+            try:
+                auth, addr = raw.split("@")
+                self.config["proxy_user"], self.config["proxy_pass"] = auth.split(":")
+                self.config["proxy_ip"], self.config["proxy_port"] = addr.split(":")
+            except: pass
+        elif ":" in raw:
+            parts = raw.split(":")
+            try:
+                if len(parts) >= 2:
+                    self.config["proxy_ip"] = parts[0]
+                    self.config["proxy_port"] = parts[1]
+                if len(parts) >= 4:
+                    self.config["proxy_user"] = parts[2]
+                    self.config["proxy_pass"] = parts[3]
+            except: pass
 
 
 # ================= WIDGETS =================
@@ -564,6 +654,35 @@ class CyberToggle(QWidget):
         painter.setPen(QPen(QColor(10, 10, 20), 1))
         painter.drawEllipse(knob_rect)
 
+class NotificationBanner(QFrame):
+    """Выдвижной стеклянный баннер для важных уведомлений."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(220, 50)
+        self.setStyleSheet("""
+            QFrame {
+                background: rgba(200, 50, 50, 200); /* Красный прозрачный */
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+            }
+        """)
+        
+        layout = QHBoxLayout(self)
+        self.label = QLabel("Сервис заблокирован. Включите Телепорт или установите Прокси в настройках")
+        self.label.setStyleSheet("color: white; font-family: 'Segoe UI'; font-weight: bold; font-size: 11px;")
+        self.label.setWordWrap(True)
+        self.label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.label)
+        
+        # Тень
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(15)
+        shadow.setColor(QColor(0, 0, 0, 100))
+        shadow.setOffset(0, 4)
+        self.setGraphicsEffect(shadow)
+        
+        self.hide() # Изначально скрыт
+
 class FuturisticWidget(QWidget):
     def __init__(self, config, on_config_save, on_toggle, on_quit):
         super().__init__()
@@ -595,6 +714,29 @@ class FuturisticWidget(QWidget):
         
         self.build_ui()
         self.setup_tray()
+
+    def show_alert(self, message, type="error"):
+        """Показывает баннер с анимацией."""
+        self.banner.label.setText(message)
+        self.banner.show()
+        
+        anim = QPropertyAnimation(self.banner, b"pos")
+        anim.setDuration(500)
+        anim.setEasingCurve(QEasingCurve.OutBack)
+        anim.setStartValue(QPoint(self.width(), 100))
+        anim.setEndValue(QPoint(self.width() - 210, 100))
+        anim.start()
+        
+        QTimer.singleShot(3000, lambda: self.hide_alert())
+
+    def hide_alert(self):
+        anim = QPropertyAnimation(self.banner, b"pos")
+        anim.setDuration(500)
+        anim.setEasingCurve(QEasingCurve.InBack)
+        anim.setStartValue(self.banner.pos())
+        anim.setEndValue(QPoint(self.width(), 100))
+        anim.finished.connect(self.banner.hide)
+        anim.start()
 
     def update_leds(self):
         self.led_phase += 1
@@ -679,7 +821,7 @@ class FuturisticWidget(QWidget):
         h = self.height()
         rect = QRectF(15, 15, w-30, h-30)
         
-        painter.setBrush(QColor(10, 15, 25, 240)) 
+        painter.setBrush(QColor(10, 15, 25, 225)) # ~88% прозрачности (225/255)
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(rect, 20, 20)
         
@@ -794,7 +936,10 @@ class FuturisticWidget(QWidget):
         self.check_leave()
 
     def get_tray_icon(self):
-        if os.path.exists(LOGO_PATH):
+        # Используем квадратную иконку для трея
+        if os.path.exists(ICON_PATH):
+            return QIcon(ICON_PATH)
+        elif os.path.exists(LOGO_PATH):
             return QIcon(LOGO_PATH)
         else:
             pixmap = QPixmap(64, 64)

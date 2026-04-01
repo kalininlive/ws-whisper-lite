@@ -8,7 +8,7 @@ echo ===========================================
 :: 1. Building Code (Nuitka)
 echo [1/2] Compiling code with Nuitka (Light Mode)...
 :: УБРАНЫ --include-data-dir для bin и models
-python -m nuitka --standalone --show-progress --disable-console --windows-icon-from-ico=assets/icon.ico src/main.py --output-dir=dist --output-filename=DictationApp.exe
+python -m nuitka --standalone --show-progress --disable-console --enable-plugin=pyside6 --windows-icon-from-ico=assets/icon.ico --include-data-dir=assets=assets --include-package-data=speech_recognition src/main.py --output-dir=dist --output-filename=DictationApp.exe
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

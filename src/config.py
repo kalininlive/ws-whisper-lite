@@ -26,8 +26,15 @@ def decrypt_key(token):
 
 def load_config():
     default_config = {
-        "engine": "Whisper (Offline)",
+        "engine": "Groq",
         "groq_api_key": "",
+        "proxy_enabled": False,
+        "proxy_raw": "",
+        "proxy_ip": "",
+        "proxy_port": "",
+        "proxy_user": "",
+        "proxy_pass": "",
+        "version": "1.3",
         "language": "ru",
         "hotkey": "ctrl+alt"
     }
